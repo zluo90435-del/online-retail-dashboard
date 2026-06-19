@@ -7,8 +7,16 @@ import matplotlib.font_manager as fm
 import seaborn as sns
 import datetime as dt
 from pathlib import Path
+import pyodbc
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
+
+# ========== MS SQL 連線設定 ==========
+SQL_SERVER = r"localhost"
+SQL_DATABASE = "OnlineRetailDB"
+SQL_DRIVER = "ODBC Driver 17 for SQL Server"
+BASE_DIR = Path(__file__).parent
+EXCEL_FILE = BASE_DIR / "OnlineRetail.xlsx"
 
 
 def setup_chinese_font():
@@ -46,38 +54,81 @@ st.set_page_config(
 # 2. 標題與專案簡介
 st.title("📊 Online Retail Analytics & Market Strategy Dashboard")
 st.markdown("""
-這個專案展示了如何利用 **Python Streamlit** 結合 AI 輔助工具（Cursor），將 **54 萬筆原始跨國電商交易數據**，
-經過資料清洗、特徵工程後，建立核心營運 KPI 儀表板，並透過 **RFM 模型**、**線性迴歸預測** 與 **地理區域資料** 進行跨國市場分析與增長策略擬定。
+這個專案展示了如何利用 **Python Streamlit** 結合 **MS SQL Server** 與 AI 輔助工具（Cursor），將 **54 萬筆原始跨國電商交易數據**，
+經由 **ETL 匯入、Stored Procedure 清洗** 後，建立核心營運 KPI 儀表板，並透過 **RFM 模型**、**線性迴歸預測** 與 **地理區域資料** 進行跨國市場分析與增長策略擬定。
 """)
 
 # 加載資料的快取機制 (加速網頁讀取)
 
+def get_sql_connection():
+    conn_str = (
+        f"DRIVER={{{SQL_DRIVER}}};"
+        f"SERVER={SQL_SERVER};"
+        f"DATABASE={SQL_DATABASE};"
+        "Trusted_Connection=yes;"
+    )
+    return pyodbc.connect(conn_str)
+
+
+def normalize_dataframe_types(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df["InvoiceNo"] = df["InvoiceNo"].astype(str)
+    df["StockCode"] = df["StockCode"].astype(str)
+    df["InvoiceDate"] = pd.to_datetime(df["InvoiceDate"])
+    return df
+
+
+@st.cache_data
+def load_from_sql():
+    conn = get_sql_connection()
+    df_raw = pd.read_sql(
+        """
+        SELECT InvoiceNo, StockCode, Description, Quantity,
+               InvoiceDate, UnitPrice, CustomerID, Country
+        FROM dbo.SalesRaw
+        """,
+        conn,
+    )
+    df_valid = pd.read_sql("EXEC dbo.sp_GetCleanSales", conn)
+    conn.close()
+
+    df_raw = normalize_dataframe_types(df_raw)
+    df_valid = normalize_dataframe_types(df_valid)
+    return df_raw, df_valid
+
+
+@st.cache_data
+def load_from_excel():
+    df = pd.read_excel(EXCEL_FILE, dtype={"InvoiceNo": str, "StockCode": str})
+    df_clean = df.dropna(subset=["CustomerID"]).copy()
+    df_valid = df_clean[(df_clean["Quantity"] > 0) & (df_clean["UnitPrice"] > 0)].copy()
+    df_valid["TotalAmount"] = df_valid["Quantity"] * df_valid["UnitPrice"]
+    return df, normalize_dataframe_types(df_valid)
+
+
 @st.cache_data
 def load_and_clean_data():
-    df = pd.read_excel('OnlineRetail.xlsx')
-    
-    # 🌟 【新增這行】強制將 StockCode 轉換為字串格式，解決 pyarrow 報錯問題
-    df['StockCode'] = df['StockCode'].astype(str)
-    
-    # 資料清洗流程
-    df_clean = df.dropna(subset=['CustomerID']).copy()
-    df_valid = df_clean[(df_clean['Quantity'] > 0) & (df_clean['UnitPrice'] > 0)].copy()
-    
-    # 特徵工程
-    df_valid['TotalAmount'] = df_valid['Quantity'] * df_valid['UnitPrice']
-    return df, df_valid
+    try:
+        df_raw, df_valid = load_from_sql()
+        return df_raw, df_valid, f"MS SQL Server ({SQL_DATABASE})"
+    except Exception:
+        if not EXCEL_FILE.exists():
+            raise
+        df_raw, df_valid = load_from_excel()
+        return df_raw, df_valid, "Excel 檔案 (備援模式)"
 
 # 載入資料
 try:
-    df_raw, df_valid = load_and_clean_data()
+    df_raw, df_valid, data_source = load_and_clean_data()
 except Exception as e:
-    st.error(f"找不到資料檔案 'OnlineRetail.xlsx'，請確認檔案是否放在同一個資料夾。錯誤訊息: {e}")
+    st.error(f"找不到資料來源，請確認 SQL Server 已啟動或 Excel 檔案存在。錯誤訊息: {e}")
     st.stop()
 
 # ==========================================
 # 全域側邊欄 (Sidebar)：跨國市場篩選器
 # ==========================================
 st.sidebar.header("🌍 跨國市場動態篩選")
+st.sidebar.caption(f"資料來源：{data_source}")
 country_list = ["全部國家 (All)"] + list(df_valid['Country'].unique())
 selected_country = st.sidebar.selectbox("選擇要分析的國家/地區：", country_list)
 
