@@ -6,25 +6,32 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import seaborn as sns
 import datetime as dt
+from pathlib import Path
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
 
 
 def setup_chinese_font():
-    """設定 matplotlib 中文字型，支援本機 Windows 與 Streamlit Cloud (Linux)。"""
-    preferred_fonts = [
-        'Microsoft JhengHei', 'Microsoft YaHei',
-        'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans TC',
-        'WenQuanYi Micro Hei', 'PingFang TC', 'SimHei',
+    """載入專案內建字型，確保本機與 Streamlit Cloud 都能顯示繁體中文。"""
+    base_dir = Path(__file__).parent
+    font_candidates = [
+        base_dir / "fonts" / "NotoSansCJKtc-Regular.otf",
+        base_dir / "NotoSansCJKtc-Regular.otf",
     ]
-    available_fonts = {font.name for font in fm.fontManager.ttflist}
-    for font_name in preferred_fonts:
-        if font_name in available_fonts:
-            matplotlib.rcParams['font.sans-serif'] = [font_name, *preferred_fonts]
-            break
-    else:
-        matplotlib.rcParams['font.sans-serif'] = preferred_fonts
-    matplotlib.rcParams['axes.unicode_minus'] = False
+    for font_path in font_candidates:
+        if font_path.exists():
+            fm.fontManager.addfont(str(font_path))
+            font_name = fm.FontProperties(fname=str(font_path)).get_name()
+            matplotlib.rcParams["font.family"] = font_name
+            matplotlib.rcParams["axes.unicode_minus"] = False
+            return
+
+    preferred_fonts = [
+        "Microsoft JhengHei", "Microsoft YaHei",
+        "Noto Sans CJK TC", "Noto Sans TC", "WenQuanYi Micro Hei",
+    ]
+    matplotlib.rcParams["font.sans-serif"] = preferred_fonts
+    matplotlib.rcParams["axes.unicode_minus"] = False
 
 
 setup_chinese_font()
