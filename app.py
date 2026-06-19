@@ -1,11 +1,33 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 import seaborn as sns
 import datetime as dt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, r2_score
+
+
+def setup_chinese_font():
+    """設定 matplotlib 中文字型，支援本機 Windows 與 Streamlit Cloud (Linux)。"""
+    preferred_fonts = [
+        'Microsoft JhengHei', 'Microsoft YaHei',
+        'Noto Sans CJK TC', 'Noto Sans CJK JP', 'Noto Sans TC',
+        'WenQuanYi Micro Hei', 'PingFang TC', 'SimHei',
+    ]
+    available_fonts = {font.name for font in fm.fontManager.ttflist}
+    for font_name in preferred_fonts:
+        if font_name in available_fonts:
+            matplotlib.rcParams['font.sans-serif'] = [font_name, *preferred_fonts]
+            break
+    else:
+        matplotlib.rcParams['font.sans-serif'] = preferred_fonts
+    matplotlib.rcParams['axes.unicode_minus'] = False
+
+
+setup_chinese_font()
 
 # 1. 網頁基本設定
 st.set_page_config(
