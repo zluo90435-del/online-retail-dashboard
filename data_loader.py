@@ -7,7 +7,7 @@ import streamlit as st
 SQL_SERVER = r"localhost"
 SQL_DATABASE = "OnlineRetailDB"
 SQL_DRIVER = "ODBC Driver 17 for SQL Server"
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent
 EXCEL_FILE = BASE_DIR / "OnlineRetail.xlsx"
 
 
