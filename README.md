@@ -67,6 +67,26 @@ OnlineRetail.xlsx（原始資料）
 
 
 
+主管營運總覽
+
+
+
+一頁式 KPI、月營收趨勢、策略洞察、熱銷 Top 5
+
+
+
+
+
+資料品質監控
+
+
+
+缺失值/異常值檢核、清洗成效、覆蓋期間
+
+
+
+
+
 資料基本狀況
 
 
@@ -97,6 +117,36 @@ Champions / Loyal / At Risk / Lost 等客群分級
 
 
 
+購物籃分析
+
+
+
+商品共現組合、支持度、信心度、搭售建議
+
+
+
+
+
+同期群留存
+
+
+
+Cohort 熱力圖、各月留存率、获客品質洞察
+
+
+
+
+
+流失預警
+
+
+
+邏輯迴歸模型、AUC、高風險挽留名單
+
+
+
+
+
 全球市場地區分析
 
 
@@ -113,7 +163,7 @@ Champions / Loyal / At Risk / Lost 等客群分級
 
 月營收線性迴歸、RFM 多元迴歸
 
-側邊欄支援跨國市場動態篩選，所有分析可聯動切換國家。
+側邊欄支援跨國市場 + 日期區間動態篩選，所有分析可聯動切換。
 
 
 
@@ -215,7 +265,7 @@ Python（pandas、pyodbc）
 
 
 
-RFM 模型、線性迴歸（scikit-learn）
+RFM 模型、購物籃分析、同期群留存、邏輯迴歸流失預警、線性迴歸（scikit-learn）
 
 
 
@@ -261,6 +311,15 @@ Power BI Desktop → localhost / OnlineRetailDB → Import Views → 建立 KPI 
 
 MyRetailDatas/
 ├── app.py                          # Streamlit 儀表板主程式
+├── modules/                        # 分析模組
+│   ├── data_loader.py
+│   ├── filters.py
+│   ├── kpi.py
+│   ├── executive_summary.py
+│   ├── market_basket.py
+│   ├── cohort.py
+│   ├── churn.py
+│   └── data_quality.py
 ├── etl_import.py                   # ETL：Excel → MS SQL 匯入腳本
 ├── requirements.txt                # Python 套件
 ├── packages.txt                    # Streamlit Cloud 字型套件
