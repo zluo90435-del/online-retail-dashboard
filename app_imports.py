@@ -6,6 +6,7 @@ try:
     from modules.data_loader import load_and_clean_data
     from modules.data_quality import render_data_quality
     from modules.executive_summary import render_executive_summary
+    from modules.export_utils import render_export_sidebar
     from modules.filters import render_sidebar_filters
     from modules.market_basket import render_market_basket
 except ModuleNotFoundError:
@@ -14,5 +15,6 @@ except ModuleNotFoundError:
     from data_loader import load_and_clean_data
     from data_quality import render_data_quality
     from executive_summary import render_executive_summary
+    from export_utils import render_export_sidebar
     from filters import render_sidebar_filters
     from market_basket import render_market_basket

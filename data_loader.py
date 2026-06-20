@@ -7,18 +7,69 @@ import streamlit as st
 SQL_SERVER = r"localhost"
 SQL_DATABASE = "OnlineRetailDB"
 SQL_DRIVER = "ODBC Driver 17 for SQL Server"
-BASE_DIR = Path(__file__).resolve().parent
+
+
+def _resolve_base_dir() -> Path:
+    path = Path(__file__).resolve().parent
+    if path.name == "modules":
+        return path.parent
+    return path
+
+
+BASE_DIR = _resolve_base_dir()
 EXCEL_FILE = BASE_DIR / "OnlineRetail.xlsx"
 
 
+def _get_sql_settings() -> dict:
+    """讀取 Streamlit Secrets 或回退本機 SQL Server 設定。"""
+    try:
+        if "sql" in st.secrets:
+            sql = st.secrets["sql"]
+            return {
+                "server": sql.get("server", SQL_SERVER),
+                "database": sql.get("database", SQL_DATABASE),
+                "driver": sql.get("driver", SQL_DRIVER),
+                "username": sql.get("username"),
+                "password": sql.get("password"),
+            }
+    except Exception:
+        pass
+
+    return {
+        "server": SQL_SERVER,
+        "database": SQL_DATABASE,
+        "driver": SQL_DRIVER,
+        "username": None,
+        "password": None,
+    }
+
+
 def get_sql_connection() -> pyodbc.Connection:
-    conn_str = (
-        f"DRIVER={{{SQL_DRIVER}}};"
-        f"SERVER={SQL_SERVER};"
-        f"DATABASE={SQL_DATABASE};"
-        "Trusted_Connection=yes;"
-    )
+    cfg = _get_sql_settings()
+    if cfg.get("username") and cfg.get("password"):
+        conn_str = (
+            f"DRIVER={{{cfg['driver']}}};"
+            f"SERVER={cfg['server']};"
+            f"DATABASE={cfg['database']};"
+            f"UID={cfg['username']};"
+            f"PWD={cfg['password']};"
+            "Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+        )
+    else:
+        conn_str = (
+            f"DRIVER={{{cfg['driver']}}};"
+            f"SERVER={cfg['server']};"
+            f"DATABASE={cfg['database']};"
+            "Trusted_Connection=yes;"
+        )
     return pyodbc.connect(conn_str)
+
+
+def get_data_source_label() -> str:
+    cfg = _get_sql_settings()
+    if cfg.get("username"):
+        return f"Cloud SQL Server ({cfg['database']})"
+    return f"MS SQL Server ({cfg['database']})"
 
 
 def normalize_dataframe_types(df: pd.DataFrame) -> pd.DataFrame:
@@ -61,7 +112,7 @@ def load_from_excel() -> tuple[pd.DataFrame, pd.DataFrame]:
 def load_and_clean_data() -> tuple[pd.DataFrame, pd.DataFrame, str]:
     try:
         df_raw, df_valid = load_from_sql()
-        return df_raw, df_valid, f"MS SQL Server ({SQL_DATABASE})"
+        return df_raw, df_valid, get_data_source_label()
     except Exception:
         if not EXCEL_FILE.exists():
             raise
