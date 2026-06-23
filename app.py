@@ -17,7 +17,9 @@ from app_imports import (
     render_data_quality,
     render_executive_summary,
     render_export_sidebar,
+    render_kpi_insights,
     render_market_basket,
+    render_rfm_insights,
     render_sidebar_filters,
 )
 
@@ -136,6 +138,8 @@ with tab3:
     with col4:
         st.metric("💵 平均客單價 (AOV)", f"£{average_order_value:,.2f}")
 
+    render_kpi_insights(df_filtered)
+
     st.markdown("---")
     st.subheader("🏆 當前市場熱銷商品 Top 10 (依銷售總數量)")
 
@@ -204,6 +208,8 @@ with tab4:
         segment_stats.columns = ["Segment", "客戶人數", "總貢獻金額"]
         segment_stats["人數佔比"] = segment_stats["客戶人數"] / segment_stats["客戶人數"].sum()
         segment_stats["金額佔比"] = segment_stats["總貢獻金額"] / segment_stats["總貢獻金額"].sum()
+
+        render_rfm_insights(segment_stats)
 
         st.dataframe(
             segment_stats.style.format(
@@ -276,7 +282,7 @@ with tab8:
         )
 
     with col2:
-        st.subheader("💡 地區數據市場洞察")
+        st.subheader("💡 洞察分析說明")
         uk_rows = country_stats[country_stats["Country"] == "United Kingdom"]
         if len(uk_rows) > 0:
             uk_revenue = uk_rows["營收全球佔比"].values[0]
@@ -338,6 +344,7 @@ with tab9:
                 st.metric("平均預測誤差 (MAE)", f"£{mae_month:,.2f}")
 
             trend = "成長" if model_month.coef_[0] > 0 else "下滑"
+            st.subheader("💡 洞察分析說明")
             st.info(
                 f"""
             **解讀**：在 **{selected_country}** 市場，月營收呈現 **{trend}** 趨勢。
@@ -419,6 +426,7 @@ with tab9:
             with col4:
                 st.metric("平均預測誤差 (MAE)", f"£{mae_rfm:,.2f}")
 
+            st.subheader("💡 洞察分析說明")
             st.info(
                 f"""
             **解讀**：

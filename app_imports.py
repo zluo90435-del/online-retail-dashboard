@@ -8,6 +8,7 @@ try:
     from modules.executive_summary import render_executive_summary
     from modules.export_utils import render_export_sidebar
     from modules.filters import render_sidebar_filters
+    from modules.insights import render_kpi_insights, render_rfm_insights
     from modules.market_basket import render_market_basket
 except ModuleNotFoundError:
     from churn import render_churn_prediction
@@ -17,4 +18,5 @@ except ModuleNotFoundError:
     from executive_summary import render_executive_summary
     from export_utils import render_export_sidebar
     from filters import render_sidebar_filters
+    from insights import render_kpi_insights, render_rfm_insights
     from market_basket import render_market_basket
