@@ -85,6 +85,7 @@ def render_cohort_analysis(df_filtered: pd.DataFrame, filter_label: str) -> None
 
     best_cohort = cohort_pct[1].idxmax() if 1 in cohort_pct.columns else None
     if best_cohort is not None:
+        st.subheader("💡 洞察分析說明")
         st.info(
             f"""
             **洞察**：同期群 **{best_cohort}** 的第 1 月留存率最高（**{cohort_pct.loc[best_cohort, 1]:.1f}%**），

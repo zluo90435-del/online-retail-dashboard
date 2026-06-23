@@ -106,6 +106,7 @@ def render_market_basket(df_filtered: pd.DataFrame, filter_label: str) -> None:
     st.pyplot(fig)
 
     best = pairs_df.iloc[0]
+    st.subheader("💡 洞察分析說明")
     st.info(
         f"""
         **搭售建議**：當顧客購買「{best['商品 A']}」時，

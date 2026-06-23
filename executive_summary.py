@@ -66,7 +66,7 @@ def render_executive_summary(
             st.info("此區間無足夠月份資料。")
 
     with col_right:
-        st.subheader("💡 策略洞察")
+        st.subheader("💡 洞察分析說明")
         top_product = (
             df_filtered.groupby("Description")["Quantity"]
             .sum()

@@ -130,6 +130,7 @@ def render_churn_prediction(
 
     top_factor = coef_df.iloc[0]
     direction = "提高" if top_factor["係數"] > 0 else "降低"
+    st.subheader("💡 洞察分析說明")
     st.info(
         f"""
         **解讀**：**{top_factor['特徵']}** 是影響流失的最重要因子（係數 {top_factor['係數']:.4f}）。

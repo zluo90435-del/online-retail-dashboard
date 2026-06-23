@@ -2,6 +2,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
 
+try:
+    from modules.insights import render_data_quality_insights
+except ModuleNotFoundError:
+    from insights import render_data_quality_insights
+
 
 def _pct(part: int, total: int) -> float:
     return (part / total * 100) if total > 0 else 0.0
@@ -44,6 +49,8 @@ def render_data_quality(df_raw: pd.DataFrame, df_valid: pd.DataFrame) -> None:
         st.metric("剔除比例", f"{(1 - len(df_valid) / len(df_raw)) * 100:.1f}%")
     with col4:
         st.metric("涵蓋國家數", f"{df_valid['Country'].nunique():,}")
+
+    render_data_quality_insights(df_raw, df_valid)
 
     st.subheader("📋 品質檢核明細")
     st.dataframe(metrics_df, use_container_width=True, hide_index=True)
